@@ -1,42 +1,43 @@
-import uuid
-from flask import Flask, request
-from db import stores
+import os
 
-app = Flask(__name__)
+from flask import Flask
+from flask_smorest import Api
 
+from db import db    
+import models
 
-@app.get("/store") #http://127.0.01:5000/store
-def get_stores():
-    return{"stores": list(stores.values())}
+from resource.review import blp as ReviewBlueprint
+from resource.product import blp as ProductBlueprint
 
-@app.get("/store/<string:id>")
-def get_store(id):
-    try:
-            return stores["store_id"]
-    except KeyError:
-        return{"message" : "store not found"}, 404
+#We put all instructions inside a function
+def create_app(db_url=None):
+    #when calling this function, we can pass in a database URL that we want to connect to
+    #Creating a Flask app
+    app = Flask(__name__, instance_path=os.getcwd())
+    app.config["PROPAGATE_EXCEPTIONS"] = True
+    app.config["API_TITLE"] = "Customer Statisfaction API"
+    app.config["API_VERSION"] = "v1"
+    app.config["OPENAPI_VERSION"] = "3.0.3"
+    app.config["OPENAPI_URL_PREFIX"] = "/"
+    app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
+    app.config[
+            "OPENAPI_SWAGGER_UI_URL"
+        ] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url or os.getenv("DATABASE_URL", "sqlite:///data.db")
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    
+    #Initializeing the Flask-SQLAlchemy extension
+    db.init_app(app)
+    
+    #Creating an API object using Api(app) from the Flask-Smorest library 
+    api = Api(app)
 
-@app.get("/store/<string:name>/item")
-def get_item_in_store(name):
-    for store in stores:
-        if store["name"]==name:
-            return {"items": store["items"]}
-    return {"message":"store not found"}, 404
+    #Defining a "before_first_request" handler that creates the database tables when the app starts.
+    @app.before_first_request
+    def create_tables():
+        db.create_all()
 
-@app.post("/store") 
-def create_stores():
-    store_data = request.get_json()
-    store_id = uuid.uuid4().hex
-    store = {**store_data, "id":store_id}
-    stores.append(store)
-    return store, 201
-
-@app.post("/store/<string:name>/item")
-def create_item(name):
-    request_data = request.get.json()
-    for store in stores:
-        if store["name"]==name:
-            new_item={"name":request_data["name"], "price":request_data["price"]}
-            store["items"].append(new_item)
-            return new_item, 201
-    return {"message":"store not found"}, 404
+    #Registering two blueprints with the API: "ReviewBlueprint" and "ProductBlueprint"
+    api.register_blueprint(ReviewBlueprint)
+    api.register_blueprint(ProductBlueprint)
+    return app
