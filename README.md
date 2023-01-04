@@ -1,6 +1,6 @@
 # Customer Satisfaction Analyzer
 
-a RESTful API that allows businesses to measure the
+a RESTful, AI-empowered API that allows businesses to measure the
 satisfaction of their customers in real-time.
 
 ## Database
