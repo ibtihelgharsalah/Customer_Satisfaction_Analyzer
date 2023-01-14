@@ -42,11 +42,14 @@ class Review(MethodView):
 
     @blp.arguments(ReviewUpdateSchema)
     @blp.response(200, ReviewSchema)
-    def put (self, review_data, review_id): #update a review body given a review_id
+    def put (self, review_data, review_id): #update a review body and sentiment given a review_id
         review = ReviewModel.query.get_or_404(review_id)
 
         if review:
-            review.price = review_data["body"]
+            review.body = review_data["body"]
+            sentiment = predict_sentiment(review_data["body"])
+            review_data['sentiment'] = sentiment
+            review.sentiment = review_data['sentiment']
         else:
             review = ReviewModel(**review_data)
             

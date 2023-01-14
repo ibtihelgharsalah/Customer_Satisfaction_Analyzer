@@ -12,13 +12,13 @@ class PlainReviewSchema(Schema):
     #(i.e., when using the dump method), and will not be used when 
     #deserializing data (i.e., when using the load method).
     body = fields.Str(required=True)
-    sentiment = fields.Str(required=True)
+    sentiment = fields.Str(required=False)
     product_id = fields.Str(required=True)
 
 class PlainProductSchema(Schema):
     id = fields.Str(dump_only=True)
     name = fields.Str(required=True)
-    overall_satisfaction = fields.Float(required=True)
+    overall_satisfaction = fields.Float(required=False)
     
 class ReviewUpdateSchema(Schema):
     body = fields.Str()

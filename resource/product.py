@@ -55,13 +55,14 @@ class ProductList(MethodView):
     @blp.arguments(ProductSchema)
     @blp.response(200, ProductSchema)  
     def post(self, product_data, review_data): # add a new product to the database
-        
+        """
         # Create a session to execute queries
         Session = sessionmaker(ReviewModel)
         session = Session()
-        
+        """
         # Execute a SELECT query to fetch the review sentiment column where product id is specified
-        review_sents = session.query(review_data["sentiment"]).all()
+        data = request.get_json()
+        review_sents = ReviewModel.query(review_data["sentiment"]).all()
 
         # Create an array to store the review sentiments
         review_sents_array = []
